@@ -28,6 +28,58 @@
     
 
 
+
+
+ /* Add custom menu item and endpoint to WooCommerce My-Account page */
+
+function my_custom_endpoints() {
+    add_rewrite_endpoint( 'edit-registry', EP_ROOT | EP_PAGES );
+}
+
+add_action( 'init', 'my_custom_endpoints' );
+
+function my_custom_query_vars( $vars ) {
+    $vars[] = 'edit-registry';
+
+    return $vars;
+}
+
+add_filter( 'query_vars', 'my_custom_query_vars', 0 );
+
+function my_custom_flush_rewrite_rules() {
+    flush_rewrite_rules();
+}
+
+add_action( 'init', 'my_custom_flush_rewrite_rules' );
+
+function my_custom_my_account_menu_items( $items ) {
+    $items = array(
+        'dashboard'         => __( 'Dashboard', 'woocommerce' ),
+        'edit-registry'      => __( 'Edit Registry', 'woocommerce' ),     
+        'orders'            => __( 'Orders', 'woocommerce' ),
+        'downloads'       => __( 'Downloads', 'woocommerce' ),
+        'edit-address'    => __( 'Addresses', 'woocommerce' ),
+        //'payment-methods' => __( 'Payment Methods', 'woocommerce' ),
+        'edit-account'      => __( 'Edit Account', 'woocommerce' ),
+        'customer-logout'   => __( 'Logout', 'woocommerce' ),
+    );
+
+    return $items;
+}
+
+add_filter( 'woocommerce_account_menu_items', 'my_custom_my_account_menu_items' );
+
+function my_custom_endpoint_content() {
+ 
+do_shortcode('[wedding_giftregistry_form]');
+}
+
+add_action( 'woocommerce_account_edit-registry_endpoint', 'my_custom_endpoint_content' );
+
+
+
+
+
 // Added To Dash Board Menu Content
  
     function wedding_gift_registry(){
@@ -55,20 +107,23 @@
             <tbody>
 
                 <?php	function getUsers(){
-                    global $wpdb;
-                    global $table;
- 
-                    $results = $wpdb->get_results( 'SELECT * FROM  wp_wedding_registry_registry', OBJECT );
+                    global $wpdb;  
+                    $prefix= $wpdb->prefix;
+                    $table = $prefix."wedding_registry_wishlists"; 
+                    
+                    $results = $wpdb->get_results( 'SELECT * FROM '.$table.'', OBJECT );
 
                     foreach ( $results as $Users ){
-                    $userId= $Users->reg_id;
-                    $bride_FirstName= $Users->bride_FirstName;
-                    $bride_LastName= $Users->bride_LastName; 
-
-                    echo'<th scope="row">'.$userId.'</th>
+                    $wId= $Users->id;
+                    $groom_FirstName= $Users->goorm_firstname;
+                    $bride_LastName= $Users->bride_lastname; 
+                    $message= $Users->message; 
+                    
+                    echo'<th scope="row">'.$wId.
+                     '</th>
+                        <td>'.$groom_FirstName.'</td>
                         <td>'.$bride_LastName.'</td>
-                        <td>'.$bride_LastName.'</td>
-                        <td>'.$bride_FirstName.'</td> 
+                        <td>'.$message.'</td> 
                         <td><a href=""><i class="fa fa-eye" aria-hidden="true"></i> 	</a></td>
                         <td class="table-danger"><a href="" ><i class="fa fa-trash" aria-hidden="true"></i>
                         </a></td>
@@ -99,19 +154,27 @@
 
   // Add Styles To Admin  
     function my_admin_theme_style() {
+
         wp_enqueue_style('my-admin-theme', plugins_url('css/wedding-gift-registry-admin.css', __FILE__));
         wp_enqueue_style('my-admin-bootstrap', plugins_url('css/bootstrap.min.css', __FILE__));
         wp_enqueue_style('font-awesome', plugins_url('css/font-awesome.min.css', __FILE__));
+        wp_enqueue_style('modal', plugins_url('css/jquery.modal.min.css', __FILE__));
         
-        wp_enqueue_script('my-admin-jquery-js', plugins_url('js/jquery.min.js', __FILE__)); 
-        
+         
+        wp_enqueue_script('my-admin-jquery-js', plugins_url('js/jquery.min.js', __FILE__));  
         wp_enqueue_script('my-admin-popper-js',plugins_url('js/popper.min.js', __FILE__));   	
         wp_enqueue_script('my-admin-bootstrap-js', plugins_url('js/bootstrap.min.js', __FILE__)); 	 	
         wp_enqueue_script('my-admin-theme-js', plugins_url('js/wedding-gift-registry-admin.js', __FILE__));
+        wp_enqueue_script('my-admin-modal-js', plugins_url('js/modal.min.js', __FILE__));
         
+         
+         
     }
 	add_action('admin_enqueue_scripts', 'my_admin_theme_style');
 	add_action('login_enqueue_scripts', 'my_admin_theme_style'); 
 
 
+    
+
+    
 ?>

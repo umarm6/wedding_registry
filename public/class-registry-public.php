@@ -73,7 +73,9 @@ class Registry_Public {
 		 * class.
 		 */
 
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/bootstrap.min.css', array(), $this->version, 'all' );
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/registry-public.css', array(), $this->version, 'all' );
+		
 
 	}
 
@@ -100,4 +102,6 @@ class Registry_Public {
 
 	}
 
-}
+
+
+ }
