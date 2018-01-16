@@ -1,7 +1,6 @@
 <?php
 
-
-
+ 
 function my_action() {
 	global $wpdb; // this is how you get access to the database
 

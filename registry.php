@@ -186,7 +186,7 @@ $wpdb->query($query2);
      *
      * @since    1.0.0
      */
-
+    
 
 
     

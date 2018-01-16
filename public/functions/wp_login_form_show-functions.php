@@ -4,8 +4,7 @@
 
   
 function wp_login_form_show(){
-    
-  
+   
 global $wpdb ;
 global $woocommerce;
 global $product;
@@ -18,7 +17,7 @@ $products_id = $wpdb->get_row( 'SELECT product_id FROM '.$registry_item_table.' 
 $product_id= $products_id['product_id'];
    
 $resultss = $wpdb->get_results( 'SELECT * FROM '.$registry_item_table.' WHERE wish_id ='.$wpu_id.'', OBJECT);
-$num_rows = $wpdb->get_var("SELECT COUNT(*) FROM $registry_item_table"); /// number of rows
+$num_rows = $wpdb->get_var('SELECT COUNT(*) FROM '.$registry_item_table.''); /// number of rows
 
     // foreach started
     
@@ -37,13 +36,15 @@ $num_rows = $wpdb->get_var("SELECT COUNT(*) FROM $registry_item_table"); /// num
      
 
   $wpu_link_id=  $temp_array[0]; 
-  $account = $wpdb->get_row( "SELECT goorm_firstname , bride_firstname  FROM $registry_wishlist_table WHERE wpuser_id='$wpu_link_id'", ARRAY_A);
+  $account = $wpdb->get_row( "SELECT *  FROM $registry_wishlist_table WHERE wpuser_id='$wpu_link_id'", ARRAY_A);
   // $account = $wpdb->get_row( 'SELECT goorm_firstname , bride_firstname  FROM '.$registry_wishlist_table, ARRAY_A);
   
 
   $accountGroom= $account['goorm_firstname'];
+  $accountGroomLast= $account['goorm_lastname'];
   $accountBride= $account['bride_firstname'];
-   
+  $accountBrideLast= $account['bride_lastname'];
+  
   $acount_page = get_page_by_path('wedding-giftregistry');
   $acount_pageId = $acount_page->ID;
 
@@ -89,27 +90,33 @@ $num_rows = $wpdb->get_var("SELECT COUNT(*) FROM $registry_item_table"); /// num
           <section>
 
           <div class="container">
-          <h2>Bordered Table quer</h2>
-          <p>The .table-bordered class adds borders on all sides of the table and the cells:</p>            
+          <h2 class="text-center" style="font-family:'Great Vibes', cursive;font-size: 50px; text-transform: capitalize; "> <?php echo" $accountGroom $accountGroomLast"."&nbsp; & &nbsp;"."$accountBride $accountBrideLast" ;  ?>  </h2>
+          <p  style="text-align:center;    font-size: x-large;  font-style: italic;  text-transform: capitalize; "><?php echo $account['message']; ?></p>            
+          <p  style="text-align:center;    font-size: x-large;  font-style: italic;  text-transform: capitalize; "><?php echo $account['event_date_time']; ?></p>            
+
           <table class="table table-bordered">
           <thead>
             <tr>
-            <?php if(is_user_logged_in()):?>   <th> </th>  <?php endif;?>
+            <?php if(is_user_logged_in() && get_current_user_id() == $wpu_link):?>   <th> </th>  <?php endif;?>
               <th>PRODUCT</th>
               <th>PRICE</th>
-              <th> QUANTITY	asas</th> 
-            <th><?php if(is_user_logged_in()):?>RECEIVED QUANTITY<?php else: ?><br> DESIRED QUANTITY  <?php endif;?></th> 
+              <th> QUANTITY</th> 
+            <th><?php if(is_user_logged_in() && $_SERVER['QUERY_STRING']):?> DESIRED QUANTITY<?php else: ?><br> RECEIVED  QUANTITY  <?php endif;?></th> 
             <th></th>
             </tr>
           </thead>
           <tbody id="registry-products">
-
+          
           <?php
             foreach ( $resultss as $resu ): 
               
                   $product_id=$resu->product_id;
                   $variation_id=$resu->variation_id;
                   $product_new_id=$resu->product_id;
+                  $received_qty=$resu->received_qty;
+                  $qty= $resu->quantity;
+                  
+                   $wish_id=$resu->wish_id;
                   
                   if($variation_id==0){
                     $products = wc_get_product($product_id); 
@@ -121,8 +128,7 @@ $num_rows = $wpdb->get_var("SELECT COUNT(*) FROM $registry_item_table"); /// num
                     
                   }
 
-
-            ?>
+             ?>
             <tr>
             <form method="POST" action="">
             <?php 
@@ -133,21 +139,26 @@ $num_rows = $wpdb->get_var("SELECT COUNT(*) FROM $registry_item_table"); /// num
               <td> <img src="<?php echo $post_thumbnail_id; ?>"/><a href="<?php echo get_permalink($product_id); ?>" class="pl-4"><?php echo $products->get_name();?></a></td>
               <td><?php echo 'LKR &nbsp;' . number_format($products->get_price(), 2, '.', ' ,'); ?></td>
               <td>
-                  <input type="number" class="btn-outline-warning btn buy-qty-<?php  if($variation_id == 0): echo $product_new_id; else: echo$variation_id; endif;?>" name="qtys" value="1" min="1" <?php if(!is_user_logged_in()): ?> max="<?php echo $resu->quantity;   endif; ?>"  qty="<?php echo  $product_new_id; ?>">
+                  <input type="number" class="btn-outline-warning btn buy-qty-<?php  if($variation_id == 0): echo $product_new_id; else: echo$variation_id; endif;?>"
+                   name="qtys" value="<?php if($qty- $received_qty == 0):  echo"0"; else: echo "1"; endif; ?>" min="<?php if($qty- $received_qty == 0):  echo"0"; else: echo "1"; endif; ?>" <?php if(is_user_logged_in()): ?> max="<?php echo $qty- $received_qty; ?>"<?php elseif(!is_user_logged_in()): ?>max="<?php echo $qty- $received_qty;    endif; ?>" 
+                    qty="<?php echo  $product_new_id; ?>">
                   <input type="hidden" class="btn-outline-warning btn variable_id" value="<?php echo  $variation_id; ?>" name="variable_ids">
                   <input type="hidden" class="btn-outline-warning btn product_id" value="<?php echo  $product_id; ?>" name="product_ids">
 
               </td>
-              <td><p><?php echo  $resu->quantity; ?></p></td>
-              <td><button type="submit"  name="submit" class="btn btn-primary buy_this" id="buy_this<?php if($variation_id == 0): echo $product_new_id; else: echo$variation_id; endif;?>" pro_id="<?php echo $product_id ; ?>"  variable_id="<?php echo $variation_id ;?>"  wpu-id="<?php echo $wpu_id;?>" >Buy This</button></td>
+              <td><p><?php echo $qty- $received_qty; ?></p></td>
+              <td><button type="submit"   name="submit" class="btn btn-primary buy_this" whish_id=<?php echo $wish_id;?> id="buy_this<?php if($variation_id == 0): echo $product_new_id; else: echo$variation_id; endif;?>" pro_id="<?php echo $product_id ; ?>"  variable_id="<?php echo $variation_id ;?>"  wpu-id="<?php echo $wpu_id; ?>" <?php if($qty- $received_qty == 0):  echo  "disabled> Soled Item"; else: ?><?php echo">Buy This"; endif;?></button></td>
             </form>
+             
               </tr> 
 
-          <?php
+          
+            <?php
 
-            
-
+        
+ 
           endforeach; 
+          
           if($num_rows ==0):
             
           ?> <tr id="post-<?php if($variation_id == 0){echo $product_id ;}else{echo $variation_id;} ?>"> 
@@ -157,6 +168,17 @@ $num_rows = $wpdb->get_var("SELECT COUNT(*) FROM $registry_item_table"); /// num
          <?php
          endif;
          ?>
+             <script>
+        jQuery(document).ready(function(){
+          var qty=jQuery('.buy_this').attr('qty');
+          if(qty){
+            jQuery(this).html('sdasd');
+          }
+
+         });
+</script>
+
+
            <script>  
 jQuery(document).ready(function(){
 
@@ -167,6 +189,8 @@ jQuery(document).ready(function(){
               var buy_pro_id=jQuery(this).attr('pro_id');
               var buy_var_id=jQuery(this).attr('variable_id');
               var buy_wpu_id=jQuery(this).attr('wpu-id');
+              var whish_id=jQuery(this).attr('whish_id');
+
               if(buy_var_id==0){
                 var buy_qty_id=buy_pro_id;
               }else{ 
@@ -185,6 +209,7 @@ jQuery(document).ready(function(){
                     'buy_pro_id':buy_pro_id,
                     'buy_var_id':buy_var_id,
                     'buy_qty':buy_qty,
+                    'whish_id':whish_id
                   }),
                   success:function(data){ 
                      
@@ -303,12 +328,14 @@ if(is_user_logged_in()){
 //  }
      if($url == $acount_pageLink && $_SERVER['QUERY_STRING'] ): 
       
+     
       ?>
       <section>
 
       <div class="container">
-      <h2>Bordered Tables log</h2>
-      <p>The .table-bordered class adds borders on all sides of the table and the cells:</p>            
+      <h2 class="text-center" style="font-family:'Great Vibes', cursive;font-size: 50px; text-transform: capitalize; "> <?php echo" $accountGroom $accountGroomLast"."&nbsp; & &nbsp;"."$accountBride $accountBrideLast" ;  ?>  </h2>
+      <p  style="text-align:center;    font-size: x-large;  font-style: italic;  text-transform: capitalize; "><?php echo $account['message']; ?></p>            
+      <p  style="text-align:center;    font-size: x-large;  font-style: italic;  text-transform: capitalize; "><?php echo $account['event_date_time']; ?></p>          
       <table class="table table-bordered">
       <thead>
         <tr>
@@ -546,32 +573,50 @@ jQuery(document).ready(function(){
   
           
       $wpu_link = get_current_user_id();
-      $accounts = $wpdb->get_row( "SELECT goorm_firstname , bride_firstname  FROM $registry_wishlist_table WHERE wpuser_id='$wpu_link'", ARRAY_A);
+      $accounts = $wpdb->get_row( "SELECT *  FROM $registry_wishlist_table WHERE wpuser_id='$wpu_link'", ARRAY_A);
       
      
-  $accountGrooms= $accounts['goorm_firstname'];
-  $accountBrides= $accounts['bride_firstname'];
+  $accountGroom= $accounts['goorm_firstname'];
+  $accountGroomLast= $accounts['goorm_lastname'];
+  $accountBride= $accounts['bride_firstname'];
+  $accountBrideLast= $accounts['bride_lastname'];
    
   $acount_page = get_page_by_path('wedding-giftregistry');
   $acount_pageId = $acount_page->ID;
 
   }else{
     $wpu_link = $wpu_link_id;
-    $accounts = $wpdb->get_row( "SELECT goorm_firstname , bride_firstname  FROM $registry_wishlist_table WHERE wpuser_id=$wpu_link", ARRAY_A);
+    $accounts = $wpdb->get_row( "SELECT *  FROM $registry_wishlist_table WHERE wpuser_id=$wpu_link", ARRAY_A);
     
-    $accountGrooms= $accounts['goorm_firstname'];
-    $accountBrides= $accounts['bride_firstname'];
-     
+  
+    $accountGroom= $accounts['goorm_firstname'];
+    $accountGroomLast= $accounts['goorm_lastname'];
+    $accountBride= $accounts['bride_firstname'];
+    $accountBrideLast= $accounts['bride_lastname'];
 
   }
    $acount_pageLinks = get_permalink($acount_pageId).'?'.$wpu_link.'&'.$accountGrooms.'_'.$accountBrides;
          
+   $items = $woocommerce->cart->get_cart();
+   
+       foreach($items as $item => $values) { 
+      //      $_product =  wc_get_product( $values['data']->get_id()); 
+      //      echo "<b>".$_product->get_title().'</b>  <br> Quantity: '.$values['quantity'].'<br>'; 
+      //      $price = get_post_meta($values['product_id'] , '_price', true);
+      //      echo "  Price: ".$price."<br>";
+      echo $values['whishlisID'].'<br/>';
+      
+       } 
+
+       
+
           ?>
         <section>
         
               <div class="container">
-              <h2>Bordered Tables log</h2>
-              <p>The .table-bordered class adds borders on all sides of the table and the cells:</p>            
+              <h2 class="text-center" style="font-family:'Great Vibes', cursive;font-size: 50px; text-transform: capitalize; "> <?php echo" $accountGroom $accountGroomLast"."&nbsp; & &nbsp;"."$accountBride $accountBrideLast" ;  ?>  </h2>
+              <p  style="text-align:center;    font-size: x-large;  font-style: italic;  text-transform: capitalize; "><?php echo $accounts['message']; ?></p>            
+              <p  style="text-align:center;    font-size: x-large;  font-style: italic;  text-transform: capitalize; "><?php echo $accounts['event_date_time']; ?></p>             <br/>     
               <table class="table table-bordered">
               <thead>
                 <tr>
@@ -592,6 +637,7 @@ jQuery(document).ready(function(){
                 
                     $product_id=$resu->product_id;
                     $variation_id=$resu->variation_id;
+                    $receved_qty=$resu->received_qty;
                     if($variation_id==0){
                       $products = wc_get_product($product_id); 
                       $post_thumbnail_id = get_the_post_thumbnail_url( $products->get_id(),'thumbnail');
@@ -797,36 +843,35 @@ jQuery(document).ready(function(){
               </tbody>
               </table>
                     <!-- ===============shre this=========== -->
-                    <?php          if($num_rows_id >0):
+                    <?php     
+                          if($num_rows_id >0):
                        ?>
 
             <div class="row">
             <div class="col-md-3 ">
             </div>
-
+ 
               <div class="col-md-6 text-center">
-              <?php echo $acount_pageLinks; ?>
-              <img src="<?php echo plugins_url( "../css/images/share.jpg", __FILE__ );?>"         style="width:220px ;display: block;  margin: 25px auto;">
+               <img src="<?php echo plugins_url( "../css/images/share.jpg", __FILE__ );?>"         style="width:220px ;display: block;  margin: 25px auto;">
  
               <div id="share-buttons"> 
-     
      <!-- Email -->
-    <a href="mailto:?Subject=Simple Share Buttons&amp;Body=<?php echo urlencode($acount_pageLink);  ?>">
+    <a href="mailto:?Subject=Simple Share Buttons&amp;Body=<?php echo urlencode($acount_pageLinks);  ?>">
         <img src="https://simplesharebuttons.com/images/somacro/email.png" alt="Email" />
     </a>
  
     <!-- Facebook -->
-    <a href="http://www.facebook.com/sharer.php?u=<?php echo urlencode($acount_pageLink); ?>" target="_blank">
+    <a href="http://www.facebook.com/sharer.php?u=<?php echo urlencode($acount_pageLinks); ?>" target="_blank">
         <img src="https://simplesharebuttons.com/images/somacro/facebook.png" alt="Facebook" />
     </a>
     
     <!-- Google+ -->
-    <a href="https://plus.google.com/share?url=<?php echo urlencode($acount_pageLink);?>" target="_blank">
+    <a href="https://plus.google.com/share?url=<?php echo urlencode($acount_pageLinks);?>" target="_blank">
         <img src="https://simplesharebuttons.com/images/somacro/google.png" alt="Google" />
     </a>
     
     <!-- LinkedIn -->
-    <a href="http://www.linkedin.com/shareArticle?mini=true&amp;url=<?php echo urlencode($acount_pageLink);?>" target="_blank">
+    <a href="http://www.linkedin.com/shareArticle?mini=true&amp;url=<?php echo urlencode($acount_pageLinks);?>" target="_blank">
         <img src="https://simplesharebuttons.com/images/somacro/linkedin.png" alt="LinkedIn" />
     </a>
     
@@ -835,7 +880,7 @@ jQuery(document).ready(function(){
         <img src="https://simplesharebuttons.com/images/somacro/pinterest.png" alt="Pinterest" />
     </a> 
     <!-- Twitter -->
-    <a href="https://twitter.com/share?url=<?php echo urlencode($acount_pageLink);?>" target="_blank">
+    <a href="https://twitter.com/share?url=<?php echo urlencode($acount_pageLinks);?>" target="_blank">
         <img src="https://simplesharebuttons.com/images/somacro/twitter.png" alt="Twitter" />
     </a>
        <!-- Print -->
@@ -894,6 +939,8 @@ jQuery(document).ready(function(){
         <?php
 
     endif;   
+
+    
 } ///wp_login_form_show closed
 
 
@@ -949,7 +996,9 @@ function delete_registry_item() {
   
    
    
-   } 
+   }
+   
+   
     wp_die();
 }
 
@@ -967,13 +1016,28 @@ function  add_registry_item_cart(){
   $quantities= $_POST['buy_qty'];
   $variation_id= $_POST['buy_var_id'];
   $product_id= $_POST['buy_pro_id'];
-     
-   WC()->cart->add_to_cart( $product_id, $quantities, $variation_id, $variation = array(), $cart_item_data = array() );
+  $whishlisIDs= $_POST['whish_id'];
+  // WC()->session->set( 'whishlist_id', $cart_item_data );
+  // $whishlisID=WC()->session->get('whishlist_id');
+  
+ 
+   WC()->cart->add_to_cart( $product_id, $quantities, $variation_id, $variation = array(), $cart_item_data = array(
 
-
+     'whishlisID' => $whishlisIDs
+   ));
+  
 wp_die();
 
 }
+
+// function filter_woocommerce_add_cart_item_data( $cart_item_data, $product_id, $variation_id ) { 
+//   // make filter magic happen here... 
+//   return $cart_item_data; 
+// }; 
+       
+// // add the filter 
+// add_filter( 'woocommerce_add_cart_item_data', 'filter_woocommerce_add_cart_item_data', 10, 3 ); 
+
 
 
 
@@ -996,7 +1060,7 @@ function  save_registry_quantity(){
  $wedding_registry_item = $wpdb->prefix."wedding_registry_item";
  error_log($wedding_registry_item);
  
-         $wpdb->query($wpdb->prepare( "UPDATE $wedding_registry_item SET quantity=$quantities  WHERE wish_id= $buy_prof_id AND variation_id= $variation_id AND product_id=$product_id"));
+         $wpdb->query($wpdb->prepare( "UPDATE $wedding_registry_item SET quantity=$quantities  WHERE wish_id=$buy_prof_id AND variation_id=$variation_id AND product_id=$product_id"));
 
 //  $productcheck = $wpdb->get_row( 'SELECT * FROM '.$wedding_registry_iteme.' WHERE wish_id ='.$rmwpu.' AND product_id='.$product_id.'', ARRAY_A);
  
@@ -1005,4 +1069,18 @@ wp_die();
 
 }
 
+
+function after_payment(){
+  
+      
+  global $wpdb ;
+  global $woocommerce;
+  global $product;
+  
+  var_dump($woocommerce);
+  
+  
+  return;
+  }
+ 
 ?>
