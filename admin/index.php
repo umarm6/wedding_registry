@@ -1,5 +1,34 @@
 <?php  
 
+// Add Styles To Admin  
+function my_admin_theme_style() {
+    
+            wp_enqueue_style('my-admin-theme', plugins_url('css/wedding-gift-registry-admin.css', __FILE__));
+            wp_enqueue_style('my-admin-bootstrap', plugins_url('css/bootstrap.min.css', __FILE__));
+            wp_enqueue_style('font-awesome', plugins_url('css/font-awesome.min.css', __FILE__));
+            wp_enqueue_style( 'jquery-ui', plugins_url('css/jquery-ui.min.css', __FILE__), false, '1.0.0', 'all');   
+            
+            // wp_enqueue_style('modal', plugins_url('css/jquery.modal.min.css', __FILE__));
+            
+             
+            wp_enqueue_script('my-admin-jquery-js', plugins_url('js/jquery.min.js', __FILE__));  
+            wp_enqueue_script('my-admin-popper-js',plugins_url('js/popper.min.js', __FILE__));   	
+            wp_enqueue_script( 'bootstraps', plugins_url( 'js/bootstrap_2.min.js', __FILE__ ), false, '4.0.0', 'all'); 
+            wp_enqueue_script( 'notify', plugins_url( '/js/notify.min.js', __FILE__ ), false, '4.0.0', 'all'); 
+          wp_enqueue_script( 'bootbox', plugins_url( '/js/bootbox.min.js', __FILE__ ), false, '4.0.0', 'all'); 
+            wp_enqueue_script('my-admin-theme-js', plugins_url('js/wedding-gift-registry-admin.js', __FILE__));
+    
+    
+             
+             
+             
+        }
+        add_action('admin_enqueue_scripts', 'my_admin_theme_style');
+        add_action('login_enqueue_scripts', 'my_admin_theme_style'); 
+    
+    
+        
+
 // Added To Dash Board Menu
     add_action( 'admin_menu', 'Menu_registry' ); 
 
@@ -91,47 +120,113 @@ add_action( 'woocommerce_account_edit-registry_endpoint', 'my_custom_endpoint_co
         if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
         
         ?> 
-    
+    <script>
+    jQuery(document).ready(function(){
+        var wid= jQuery('.removebtn').attr('wid');
+
+        jQuery('.removebtn').click(function(event){
+            event.preventDefault();
+
+            var wid= jQuery(this).attr('wid');
+            console.log(wid);  
+
+            var ajaxurl = "<?php echo admin_url('admin-ajax.php'); ?>";
+
+            bootbox.confirm({
+                message: "Do You Want To remove Whishlists?",
+                buttons: {
+                    confirm: {
+                        label: 'Yes',
+                        className: 'btn-success'
+                    },
+                    cancel: {
+                        label: 'No',
+                        className: 'btn-danger'
+                    }
+                },
+                callback: function (result) {
+                  if(result == true){
+
+                    jQuery.ajax({
+                          url: ajaxurl,
+                           method:'post',
+                          data: ({ 
+                            action:'delete_registry_whishlis',
+                             'wid':wid,
+                          }),
+                          success:function(data){ 
+                            jQuery('#remove'+wid).notify(
+                                "Wishlist Is Deleted", 
+                                { position:"left center", className: "success"  }
+                              );
+        
+                              setTimeout(function(){
+                              jQuery('#'+wid).empty();}, 1500);
+                             },
+                          error: function (xhr, textStatus, errorThrown) { 
+                          }
+                        });
+
+                   }else{
+
+                   }
+                }
+            });
+        });
+
+  });
+
+    </script>
     <section>
         <table class="table text-center">
             <thead>
                 <tr>
                 <th scope="col">#</th>
-                <th scope="col">First Name</th>
-                <th scope="col">Last Name</th>
-                <th scope="col">Username</th>
-                <th scope="col">View</th>
-                <th scope="col">Delete</th> 
+                <th scope="col">Groom Name</th>
+                <th scope="col">Groom Email</th>
+                <th scope="col">Bride Name</th>
+                <th scope="col">Bride Email</th> 
+                 <th scope="col">Delete</th> 
                 </tr>
             </thead>
             <tbody>
 
-                <?php	function getUsers(){
+                <?php	 
                     global $wpdb;  
                     $prefix= $wpdb->prefix;
                     $table = $prefix."wedding_registry_wishlists"; 
+                    $table2 = $prefix."wedding_registry_item"; 
                     
-                    $results = $wpdb->get_results( 'SELECT * FROM '.$table.'', OBJECT );
+                     $results = $wpdb->get_results("SELECT * FROM  $table", OBJECT );
+                  
+                        foreach ( $results as $Users ){   
+                        $wId= $Users->id;
+                        $groom_FirstName= $Users->goorm_firstname;
+                        $groom_LasttName= $Users->goorm_lastname;
+                        $groom_Email= $Users->goorm_email;
 
-                    foreach ( $results as $Users ){
-                    $wId= $Users->id;
-                    $groom_FirstName= $Users->goorm_firstname;
-                    $bride_LastName= $Users->bride_lastname; 
-                    $message= $Users->message; 
-                    
-                    echo'<th scope="row">'.$wId.
-                     '</th>
-                        <td>'.$groom_FirstName.'</td>
-                        <td>'.$bride_LastName.'</td>
-                        <td>'.$message.'</td> 
-                        <td><a href=""><i class="fa fa-eye" aria-hidden="true"></i> 	</a></td>
-                        <td class="table-danger"><a href="" ><i class="fa fa-trash" aria-hidden="true"></i>
-                        </a></td>
-                        </tr>   ';
-                    }
-                }
+                        $bride_FirstName= $Users->bride_firstname;
+                        $bride_LasttName= $Users->bride_lastname;
+                        $bride_Email= $Users->bride_email;
 
-                getUsers();
+                         
+                        $bride_LastName= $Users->bride_lastname; 
+                        $message= $Users->message; 
+    
+                        
+                        echo'  <tr scope="row" id="'.$wId.'"> 
+                                    <td>'.$wId. '</td>
+                                    <td>'.$groom_FirstName.' '.$groom_LasttName.'</td>
+                                    <td>'.$groom_Email.'</td>
+                                    <td>'.$bride_FirstName.' '.$bride_LasttName.'</td>
+                                    <td>'.$bride_Email.'</td>  
+                                    <td class="table-danger">
+                                        <a href="" class="removebtn" id="remove'.$wId.'" wid="'.$wId.'">
+                                            <i class="fa fa-trash" aria-hidden="true"></i>
+                                        </a>
+                                    </td>
+                            </tr>   ';        
+                        }             
                 ?>
 
             </tbody>
@@ -152,29 +247,25 @@ add_action( 'woocommerce_account_edit-registry_endpoint', 'my_custom_endpoint_co
     }
 
 
-  // Add Styles To Admin  
-    function my_admin_theme_style() {
+add_action('wp_ajax_delete_registry_whishlis', 'delete_registry_whishlis'); 
 
-        wp_enqueue_style('my-admin-theme', plugins_url('css/wedding-gift-registry-admin.css', __FILE__));
-        wp_enqueue_style('my-admin-bootstrap', plugins_url('css/bootstrap.min.css', __FILE__));
-        wp_enqueue_style('font-awesome', plugins_url('css/font-awesome.min.css', __FILE__));
-        wp_enqueue_style('modal', plugins_url('css/jquery.modal.min.css', __FILE__));
-        
-         
-        wp_enqueue_script('my-admin-jquery-js', plugins_url('js/jquery.min.js', __FILE__));  
-        wp_enqueue_script('my-admin-popper-js',plugins_url('js/popper.min.js', __FILE__));   	
-        wp_enqueue_script('my-admin-bootstrap-js', plugins_url('js/bootstrap.min.js', __FILE__)); 	 	
-        wp_enqueue_script('my-admin-theme-js', plugins_url('js/wedding-gift-registry-admin.js', __FILE__));
-        wp_enqueue_script('my-admin-modal-js', plugins_url('js/modal.min.js', __FILE__));
-        
-         
-         
-    }
-	add_action('admin_enqueue_scripts', 'my_admin_theme_style');
-	add_action('login_enqueue_scripts', 'my_admin_theme_style'); 
+function  delete_registry_whishlis(){
 
+ global $wpdb ;
+ global $woocommerce;
+  
+ $wedding_registry_item = $wpdb->prefix."wedding_registry_wishlists";
 
-    
+ 
+ // add to 
+ $wid= $_POST['wid']; 
+
+  $wpdb->delete($wedding_registry_item, array( 'id' => $wid ), array( '%d' ) );
+
+wp_die();
+
+}
+  
 
     
 ?>

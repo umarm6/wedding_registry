@@ -364,7 +364,7 @@ console.log(prod_id);
       
       if($pro_id == $productcheck_pro && $prof_id == $productcheck_wish_id &&  $vari== $productcheck_var ){
 
-         $wpdb->query($wpdb->prepare( "UPDATE $wedding_registry_item SET quantity=CONCAT($qty+$productcheck_qty)  WHERE wish_id= $productcheck_wish_id AND variation_id= $productcheck_var"));
+         $wpdb->query($wpdb->prepare( "UPDATE $wedding_registry_item SET quantity=CONCAT($qty+$productcheck_qty)  WHERE wish_id= %d AND variation_id=%d",$productcheck_wish_id,$productcheck_var));
 
         }else 
         {
@@ -397,31 +397,10 @@ console.log(prod_id);
       $wedding_registry_item = $wpdb->prefix."wedding_registry_item";
       if($pro_id == $productcheck_pro && $prof_id == $productcheck_wish_id ){
         
-        error_log('equal');
-        // $newqty= CONCAT($productcheck_qty+$qty) ;
-          $wpdb->query($wpdb->prepare( "UPDATE $wedding_registry_item SET quantity=CONCAT($qty+$productcheck_qty)  WHERE wish_id= $productcheck_wish_id AND product_id= $productcheck_pro "));
+        // error_log('equal');
+           $wpdb->query($wpdb->prepare( "UPDATE $wedding_registry_item SET quantity=CONCAT($qty+$productcheck_qty)  WHERE wish_id=%d AND product_id=%d ",$productcheck_wish_id,$productcheck_pro ));
         
-        
-         
-        // $wpdb->update( 
-        //   $contactus_table, 
-        //   array( 
-        //       'wish_id' => $prof_id, 
-        //     'product_id'  => $pro_id,
-        //     'quantity'  => $qty,
-              
-        //   ),
-        //    	array( 'wish_id' => $prof_id,'product_id'  => $pro_id,
-        //   ), 
-          
-        //   array( 
-        //     '%s', //data type is string
-        //     '%s',
-        //     '%s',
-        //   // '%s',
-          
-        //   ) 
-        // ); 
+     
               }else 
               {
         $wpdb->insert( 

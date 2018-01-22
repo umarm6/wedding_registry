@@ -595,7 +595,7 @@ jQuery(document).ready(function(){
     $accountBrideLast= $accounts['bride_lastname'];
 
   }
-   $acount_pageLinks = get_permalink($acount_pageId).'?'.$wpu_link.'&'.$accountGrooms.'_'.$accountBrides;
+   $acount_pageLinks = get_permalink($acount_pageId).'?'.$wpu_link.'&'.$accountGroom.'_'.$accountBride;
          
    $items = $woocommerce->cart->get_cart();
    
@@ -604,7 +604,7 @@ jQuery(document).ready(function(){
       //      echo "<b>".$_product->get_title().'</b>  <br> Quantity: '.$values['quantity'].'<br>'; 
       //      $price = get_post_meta($values['product_id'] , '_price', true);
       //      echo "  Price: ".$price."<br>";
-      echo $values['whishlisID'].'<br/>';
+      // echo $values['whishlisID'].'<br/>';
       
        } 
 
@@ -703,7 +703,7 @@ jQuery(document).ready(function(){
            
         // console.log(message);
         bootbox.confirm({
-            message: "This is a confirm with custom button text and color! Do you like it?",
+            message: "Do You Want To Remove This Item?",
             buttons: {
                 confirm: {
                     label: 'Yes',
@@ -912,36 +912,72 @@ jQuery(document).ready(function(){
   else:
         ?>
         
-        <section>
+  <section>
     <div class="container"> 
       <div class="row"> 
           <div class="col-sm-6 offset-md-3">
               <h2 class="text-secondary"> Searche Here</h2>
-              <form>
+              <form id="search_form" datajson="">
                   <div class="form-group">
                   <label class="col-form-label" for="formGroupExampleInput">Search by Email Address</label>
-                  <input type="email" class="form-control" id="formGroupExampleInput" placeholder="Email Address">
+                  <input type="email" id="email" class="form-control"   placeholder="Email Address">
                   </div>
                   <div class="form-group">
-                  <label class="col-form-label" for="formGroupExampleInput2">Search by Name </label>
-                  <input type="text" class="form-control" id="formGroupExampleInput1" placeholder="Name">
-                  <input type="submit" class="button button-primary mt-3"> 
-                   	<a href="<?php echo get_permalink(get_option('woocommerce_myaccount_page_id') ); ?>" title="<?php _e('Create Registry','woothemes'); ?>" class="button btn-warning"><?php _e(' Create Registry','woothemes'); ?></a>
+                  <!-- <label class="col-form-label" for="formGroupExampleInput2">Search by Name </label> -->
+                  <!-- <input type="text" class="form-control"  placeholder="Name" id="name"> -->
+
+                  <input type="submit" class="button button-primary mt-3" id="search"> 
+                  <a href="<?php echo get_permalink(get_option('woocommerce_myaccount_page_id') ); ?>" title="<?php _e('Create Registry','woothemes'); ?>" class="button btn-warning"><?php _e(' Create Registry','woothemes'); ?></a>
 
                   </div>
-              </form>
-      
-          </div> 
+              </form> 
+              <script>
+                jQuery(document).ready(function(){
+
+                    jQuery('#search').click(function(e){
+                        e.preventDefault(); 
+
+                        var searchEmail=jQuery('#email').val();
+                        var searcName =jQuery('#name').val(); 
+                        var ajaxurl = "<?php echo admin_url('admin-ajax.php'); ?>";
+
+                        jQuery.ajax({
+                          url: ajaxurl,
+                          method:'GET',
+                          data: ({       
+                            dataType: "json", 
+                            action:'search_registry', 
+                            'searchEmail':searchEmail,
+                           }),
+                          success:function(msg,data, textStatus, errorThrown){ 
+                           var myJSON = JSON.stringify(msg);
+                            jQuery("#hidden_search").html(msg);                  
+console.log(msg);
+                          },error(data){
+                          console.log(data["id"]); 
+                          }
+                        });
+                     });
+
+                });
+              </script> 
+          </div>               
+              <div type="hidden" id="hidden_search" style="    width: 100%;"> </div>
+
       </div> 
     </div> 
     </section> 
         
         <?php
 
+
+
+
     endif;   
 
     
 } ///wp_login_form_show closed
+
 
 
 add_action( 'wp_ajax_delete_registry_item', 'delete_registry_item' );
@@ -1058,9 +1094,9 @@ function  save_registry_quantity(){
  //  WC()->cart->add_to_cart( $product_id, $quantities, $variation_id, $variation = array(), $cart_item_data = array() );
  
  $wedding_registry_item = $wpdb->prefix."wedding_registry_item";
- error_log($wedding_registry_item);
+//  error_log($wedding_registry_item);
  
-         $wpdb->query($wpdb->prepare( "UPDATE $wedding_registry_item SET quantity=$quantities  WHERE wish_id=$buy_prof_id AND variation_id=$variation_id AND product_id=$product_id"));
+         $wpdb->query($wpdb->prepare( "UPDATE $wedding_registry_item SET quantity=$quantities  WHERE wish_id=%d AND variation_id=%d AND product_id=%d",$buy_prof_id,$variation_id,$product_id));
 
 //  $productcheck = $wpdb->get_row( 'SELECT * FROM '.$wedding_registry_iteme.' WHERE wish_id ='.$rmwpu.' AND product_id='.$product_id.'', ARRAY_A);
  
@@ -1070,17 +1106,79 @@ wp_die();
 }
 
 
-function after_payment(){
-  
-      
-  global $wpdb ;
-  global $woocommerce;
-  global $product;
-  
-  var_dump($woocommerce);
-  
-  
-  return;
+function search_registry(){
+  global $wpdb;
+if(isset($_GET['searchEmail'])){
+   
+  $search_email =$_GET['searchEmail'];
+   
+     $wedding_registry_wishlists = $wpdb->prefix."wedding_registry_wishlists";
+    
+    $search = $wpdb->get_row("SELECT * FROM $wedding_registry_wishlists  WHERE goorm_email='$search_email' OR bride_email='$search_email'", ARRAY_A);
+    
+    $wpuser_id= $search['wpuser_id'];
+    
+    $goorm_firstname= $search['goorm_firstname'];
+    $goorm_lastname= $search['goorm_lastname'];
+    $goorm_email= $search['goorm_email'];
+    
+    $bride_firstname= $search['bride_firstname']; 
+    $bride_lastname= $search['bride_lastname'];
+    $bride_email= $search['bride_email'];
+    
+ 
+    $acount_page = get_page_by_path('wedding-giftregistry');
+    $acount_pageId = $acount_page->ID;
+
+     $acount_pageLink = get_permalink($acount_pageId).'?'.$wpuser_id.'&'.$goorm_firstname.'_'.$bride_firstname;
+    
+    // echo   $searchEmail;
+    if(  $goorm_email == $search_email OR  $bride_email == $search_email){
+       
+    
+     ?>
+ <table class="table text-center">
+            <thead>
+                <tr>
+                 <th scope="col">Groom Name</th>
+                <th scope="col">Groom Email</th>
+                <th scope="col">Bride Name</th>
+                <th scope="col">Bride Email</th> 
+                 <th scope="col">Visit</th> 
+                </tr>
+            </thead>
+            <tbody>
+             <tr scope="row" id="'.$wId.'"> 
+            <td><?php echo $goorm_firstname.' '.$goorm_lastname ?></td>
+            <td><?php echo$goorm_email?></td>
+            <td><?php echo$bride_firstname.' '.$bride_lastname?></td>
+            <td><?php echo$bride_email?></td>  
+            <td class="">
+                <a href="<?php echo $acount_pageLink ; ?>" >
+                    <i class="fa fa-eye" aria-hidden="true"></i>
+                </a>  
+            </td>
+    </tr>   
+
+            </tbody>
+        </table>
+        <?php
+    }
+    else{
+
+    echo"
+      <div class='alert alert-info' role='alert'>
+There No Search Results !</div>
+    ";
+    }
+ 
+} 
   }
+  
+  
+  add_action( 'wp_ajax_search_registry', 'search_registry' );
+  add_action( 'wp_ajax_nopriv_search_registry', 'search_registry' );
+  
+  
  
 ?>

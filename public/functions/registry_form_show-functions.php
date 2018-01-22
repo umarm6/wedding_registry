@@ -82,7 +82,8 @@ function registry_form_show(){
                 <div class="form-row  p-0">
                   <div class="form-group col-md-6">
                     <label for="wedding_date">Event Date</label>
-                    <input type="text" class="form-control" id="wedding_date" name="wedding_date" placeholder="Select Event Date" value="<?php if (is_object($result)) : echo $result->event_date_time; endif;?>">
+                     <input type="text" class="form-control" id="wedding_date" name="wedding_date" placeholder="Select Event Date" value="<?php if (is_object($result)) : echo $result->event_date_time; endif;?>">
+                    
                   </div>
                   <div class="form-group col-md-6">
                   <label for="event_location">Event location </label>

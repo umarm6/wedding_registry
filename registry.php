@@ -107,7 +107,7 @@ $wpdb->query($query2);
         `bride_image` INT(11) NULL,
         `bride_desscription` TEXT NULL,
         
-        `event_date_time` DATETIME  NULL,
+        `event_date_time` VARCHAR(250)  NULL,
         `event_location` VARCHAR(250)  NULL,
         `message` text null,
         `background_image` varchar (255)   NULL, 
